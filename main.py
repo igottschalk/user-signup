@@ -1,4 +1,3 @@
-
 from flask import Flask, request
 
 app = Flask(__name__)
@@ -64,5 +63,13 @@ form = """
 @app.route("/")
 def index():
     return form
+	
+@app.route("/", methods=['POST'])
+def form_values():
+	resp = ""
+	for field in request.form.keys():
+		resp += "<b>{key}</b>: {value}<br>".format(key=field, value=request.form[field])
+	return resp
+	
 
 app.run()
