@@ -1,111 +1,58 @@
-from flask import Flask, request
+from flask import Flask, request, redirect, render_template
+import cgi
+
 
 app = Flask(__name__)
 
 app.config['DEBUG'] = True
 
 
-form = """
-<!DOCTYPE html>
-<html>
-    <head> 
-        <title>Signup</title>           
-    </head>
-   <body>
-		<style>
-			.error {{color: red;}}
-		</style>
-        <h1>Signup</h1>
-        <form method="post">
-            <table>
-                <tbody>
-                    <tr>
-                        <td>
-                            <label for="username">Username</label>
-                        </td>
-                        <td>
-                            <input name="username" value="" type="text">
-                            <span class="error">{username_error}</span>
-                        </td>
-                    </tr>
-                     <tr>
-                        <td>
-                            <label for="password">Password</label>
-                        </td>
-                        <td>
-                            <input name="password" value="" type="password">
-                            <span class="error">{password_error}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <label for="verify">Verify Password</label>
-                        </td>
-                        <td>
-                            <input name="verify" value="" type="password">
-                            <span class="error">{verify_error}</span>
-                        </td>
-                    </tr>
-                     <tr>
-                        <td>
-                            <label for="email">Email (optional)</label>
-                        </td>
-                        <td>
-                            <input name="email" value="">
-                            <span class="error">{email_error}</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <input type="submit">
-        </form>
-    </body>
-</html> 
-"""
-
 @app.route("/")
 def index():
-    return form.format(username="", username_error="", 
-        password="", password_error="", verify="", 
-        verify_error="", email="", email_error="")
+    return render_template('signup.html')
 
 
 @app.route("/", methods=['POST'])
 def collect_user_input():
+
     username = request.form['username']
     password = request.form['password']
     verify = request.form['verify']
     email = request.form['email']
-
-    username = escape(username)
-    password = escape(password)
-    verify = escape(verify)
-    email = escape(email)
 
     username_error = ""
     password_error = ""
     verify_error = ""
     email_error = ""
 
-    if username == "" or " " in username or len(username) < 3 or len(username) > 20:
+    if username == "" or " " in username:
         username_error = "Invalid username"
 
-    if password == "" or " " in password or len(password) < 3 or len(password) > 20:
+    if len(username) < 3 or len(username) > 20:
+        username_error = "Invalid username"
+
+    if len(password) < 3 or len(password) > 20:
         password_error = "Invalid password"
 
-    if verify == "" or verify != password:
+    if verify != password:
         verify_error = "Passwords do not match"
-    
-    else:
-        return form.format(username=username, username_error=username_error, password=password, password_error=password_error, verify=verify, verify_error=verify_error)	
 
+    if email != "":
+        if "@" not in email or "." not in email or " " in email or len(email) < 3 or len(email) > 20:
+            email_error = "Invalid email" 
+
+    if len(username_error) > 0 or len(password_error) > 0 or len(verify_error) > 0:
+        return render_template('signup.html', username=username, username_error=username_error, 
+            password=password, password_error=password_error, verify=verify, verify_error=verify_error, email=email, email_error=email_error)
+    else:
+        return render_template('welcome.html', username=username)  
+        
 	
-@app.route("/", methods=['POST'])
+@app.route("/Welcome", methods=['POST'])
 def form_values():
 	resp = ""
 	for field in request.form.keys():
-		resp += "<b>{key}</b>: {value}<br>".format(key=field, value=request.form[field])
-	return resp
+		resp += "{key}: {value}".format(key=field, value=request.form[field])
+	return "Welcome"
 	
-
 app.run()
